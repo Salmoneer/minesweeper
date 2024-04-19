@@ -28,6 +28,8 @@ private:
     int m_width;
     int m_height;
 
+    int m_mines;
+
     std::vector<Cell> m_cells;
 
 
@@ -35,7 +37,7 @@ private:
 
 public:
     Game() = delete;
-    Game(int width, int height);
+    Game(int width, int height, int mines);
 
     void mainloop();
 

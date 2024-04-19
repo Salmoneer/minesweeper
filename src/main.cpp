@@ -1,7 +1,7 @@
 #include "game.hpp"
 
 int main() {
-    Game game(10, 10);
+    Game game(10, 10, 10);
     game.mainloop();
 
     return 0;
