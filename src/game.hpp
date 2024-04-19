@@ -2,7 +2,7 @@
 #include <array>
 #include <vector>
 
-#define CELL_SIZE 16
+#define IMG_SIZE 16
 #define WINDOW_SCALE 4
 
 struct Cell {
@@ -29,6 +29,9 @@ private:
     int m_height;
 
     std::vector<Cell> m_cells;
+
+
+    int get_index(int x, int y);
 
 public:
     Game() = delete;

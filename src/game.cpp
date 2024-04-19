@@ -2,14 +2,16 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <iostream>
+#include <stdexcept>
 #include <string>
 
 Game::Game(int width, int height) {
     m_width = width;
     m_height = height;
 
-    const int grid_width = m_width * CELL_SIZE;
-    const int grid_height = m_height * CELL_SIZE;
+    const int grid_width = m_width * IMG_SIZE;
+    const int grid_height = m_height * IMG_SIZE;
 
     const int window_width = grid_width * WINDOW_SCALE;
     const int window_height = grid_height * WINDOW_SCALE;
@@ -51,6 +53,18 @@ bool Game::update() {
     while (SDL_PollEvent(&event)) {
         if (event.type == SDL_QUIT) {
             return false;
+        } else if (event.type == SDL_MOUSEBUTTONDOWN) {
+            int index = get_index(event.button.x / (IMG_SIZE * WINDOW_SCALE), event.button.y / (IMG_SIZE * WINDOW_SCALE));
+
+            if (event.button.button == SDL_BUTTON_LEFT) {
+                if (!m_cells[index].flagged) {
+                    m_cells[index].uncovered = true;
+                }
+            } else if (event.button.button == SDL_BUTTON_RIGHT) {
+                if (!m_cells[index].uncovered) {
+                    m_cells[index].flagged = !m_cells[index].flagged;
+                }
+            }
         }
     }
 
@@ -66,13 +80,34 @@ void Game::draw() {
     for (int x = 0; x < m_width; x++) {
         for (int y = 0; y < m_height; y++) {
             SDL_Rect cell_rect = {
-                .x = x * CELL_SIZE,
-                .y = y * CELL_SIZE,
-                .w = CELL_SIZE,
-                .h = CELL_SIZE
+                .x = x * IMG_SIZE,
+                .y = y * IMG_SIZE,
+                .w = IMG_SIZE,
+                .h = IMG_SIZE
             };
 
-            SDL_RenderCopy(m_renderer, m_covered_texture, nullptr, &cell_rect);
+            int index = get_index(x, y);
+            Cell current_cell = m_cells[index];
+
+            if (current_cell.uncovered && current_cell.flagged) {
+                std::cout << "x: " << x << ", y: " << y << "\n";
+                throw std::runtime_error("Uncovered and flagged cell found");
+            }
+
+            SDL_Texture *current_cell_texture;
+            if (!current_cell.uncovered && !current_cell.flagged) {
+                current_cell_texture = m_covered_texture;
+            } else if (!current_cell.uncovered && current_cell.flagged) {
+                current_cell_texture = m_flag_texture;
+            } else if (current_cell.uncovered && !current_cell.mine) {
+                current_cell_texture = m_uncovered_texture;
+            } else if (current_cell.uncovered && current_cell.mine) {
+                current_cell_texture = m_mine_texture;
+            } else {
+                throw std::runtime_error("Unhandled case in choosing texture to render");
+            }
+
+            SDL_RenderCopy(m_renderer, current_cell_texture, nullptr, &cell_rect);
         }
     }
 
@@ -82,4 +117,25 @@ void Game::draw() {
     SDL_RenderPresent(m_renderer);
 
     SDL_Delay(1000 / 60);
+}
+
+int Game::get_index(int x, int y) {
+    if (x < 0 || x >= m_width) {
+        std::cout << "x: " << x << ", y: " << y << "\n";
+        throw std::runtime_error("X out of range while getting index");
+    }
+
+    if (y < 0 || y >= m_height) {
+        std::cout << "x: " << x << ", y: " << y << "\n";
+        throw std::runtime_error("Y out of range while getting index");
+    }
+
+    int index = x + m_width * y;
+
+    if (index < 0 || index >= m_width * m_height) {
+        std::cout << "x: " << x << ", y: " << y << ", index: " << index << "\n";
+        throw std::runtime_error("Index out of range while getting index");
+    }
+
+    return index;
 }
