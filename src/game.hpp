@@ -3,6 +3,7 @@
 #include <vector>
 
 #define CELL_SIZE 16
+#define WINDOW_SCALE 4
 
 struct Cell {
     bool mine;
@@ -14,6 +15,8 @@ class Game {
 private:
     SDL_Window *m_window;
     SDL_Renderer *m_renderer;
+
+    SDL_Texture *m_target;
 
     SDL_Texture *m_covered_texture;
     SDL_Texture *m_uncovered_texture;
