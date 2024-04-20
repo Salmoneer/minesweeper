@@ -43,6 +43,8 @@ private:
     int count_cell_adjacent_mines(int index);
     void count_all_adjacent_mines();
 
+    SDL_Texture *get_cell_texture(int index);
+
 public:
     Game() = delete;
     Game(int width, int height, int mines);
