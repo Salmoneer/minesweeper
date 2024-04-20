@@ -66,6 +66,7 @@ bool Game::update() {
                     if (!m_mines_generated) {
                         generate_mines(index);
                         m_mines_generated = true;
+                        count_all_adjacent_mines();
                     }
 
                     m_cells[index].uncovered = true;
@@ -174,5 +175,42 @@ void Game::generate_mines(int exclude_index) {
 
     for (int index : mine_indices) {
         m_cells[index].mine = true;
+    }
+}
+
+int Game::count_cell_adjacent_mines(int index) {
+    int count = 0;
+
+    for (int dx = -1; dx <= 1; dx++) {
+        for (int dy = -1; dy <= 1; dy++) {
+            if (dx == 0 && dy == 0) {
+                continue;
+            }
+
+            int x = index % m_width + dx;
+            int y = index / m_width + dy;
+
+            if (x < 0 || x >= m_width || y < 0 || y >= m_height) {
+                continue;
+            }
+
+            int compare_index = get_index(x, y);
+
+            if (m_cells[compare_index].mine) {
+                count++;
+            }
+        }
+    }
+
+    return count;
+}
+
+void Game::count_all_adjacent_mines() {
+    if (m_adjacent_mines.size() != 0) {
+        throw std::runtime_error("Adjacent mines counted twice");
+    }
+
+    for (int i = 0; i < m_cells.size(); i++) {
+        m_adjacent_mines.push_back(count_cell_adjacent_mines(i));
     }
 }

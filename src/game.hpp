@@ -33,9 +33,15 @@ private:
 
     std::vector<Cell> m_cells;
 
+    std::vector<int> m_adjacent_mines;
+
 
     int get_index(int x, int y);
+
     void generate_mines(int exclude_index);
+
+    int count_cell_adjacent_mines(int index);
+    void count_all_adjacent_mines();
 
 public:
     Game() = delete;
