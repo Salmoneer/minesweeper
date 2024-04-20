@@ -5,6 +5,20 @@
 #define IMG_SIZE 16
 #define WINDOW_SCALE 4
 
+enum class Direction {
+    Left,
+    Up,
+    Right,
+    Down,
+};
+
+const std::array<std::pair<int, int>, 4> direction_deltas = {{
+    {-1,  0},
+    { 0, -1},
+    { 1,  0},
+    { 0,  1},
+}};
+
 struct Cell {
     bool mine;
     bool uncovered;
@@ -44,6 +58,9 @@ private:
     void count_all_adjacent_mines();
 
     SDL_Texture *get_cell_texture(int index);
+
+    std::vector<int> get_neighbors(int index);
+    void uncover(int index);
 
 public:
     Game() = delete;

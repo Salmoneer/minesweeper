@@ -2,6 +2,7 @@
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <deque>
 #include <iostream>
 #include <random>
 #include <set>
@@ -63,12 +64,23 @@ bool Game::update() {
 
             if (event.button.button == SDL_BUTTON_LEFT) {
                 if (!m_cells[index].flagged) {
-                    if (!m_mines_generated) {
-                        generate_mines(index);
-                        count_all_adjacent_mines();
-                    }
+                    if (m_cells[index].mine) {
+                        std::cout << "You lose!" << std::endl;
+                    } else {
+                        bool force_uncover = false;
 
-                    m_cells[index].uncovered = true;
+                        if (!m_mines_generated) {
+                            force_uncover = true;
+                            generate_mines(index);
+                            count_all_adjacent_mines();
+                        }
+
+                        m_cells[index].uncovered = true;
+
+                        if (m_adjacent_mines[index] == 0 || force_uncover) {
+                            uncover(index);
+                        }
+                    }
                 }
             } else if (event.button.button == SDL_BUTTON_RIGHT) {
                 if (!m_cells[index].uncovered) {
@@ -225,5 +237,47 @@ SDL_Texture *Game::get_cell_texture(int index) {
         }
     } else {
         throw std::runtime_error("Unhandled case in choosing texture to render");
+    }
+}
+
+std::vector<int> Game::get_neighbors(int index) {
+    std::vector<int> neighbors;
+
+    int x = index % m_width;
+    int y = index / m_width;
+
+    for (auto [dx, dy] : direction_deltas) {
+        int neighbor_x = x + dx;
+        int neighbor_y = y + dy;
+
+        if (0 <= neighbor_x && neighbor_x < m_width && 0 <= neighbor_y && neighbor_y < m_height) {
+            neighbors.push_back(get_index(neighbor_x, neighbor_y));
+        }
+    }
+
+    return neighbors;
+}
+
+void Game::uncover(int index) {
+    std::set<int> closed;
+    std::deque<int> open = { index };
+
+    while (open.size() != 0) {
+        int current = open.back();
+        open.pop_back();
+
+        for (int neighbor : get_neighbors(current)) {
+            if (closed.contains(neighbor) || m_cells[neighbor].mine) {
+                continue;
+            }
+
+            closed.insert(neighbor);
+
+            m_cells[neighbor].uncovered = true;
+
+            if (m_adjacent_mines[neighbor] == 0) {
+                open.push_back(neighbor);
+            }
+        }
     }
 }
