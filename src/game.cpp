@@ -65,7 +65,6 @@ bool Game::update() {
                 if (!m_cells[index].flagged) {
                     if (!m_mines_generated) {
                         generate_mines(index);
-                        m_mines_generated = true;
                         count_all_adjacent_mines();
                     }
 
