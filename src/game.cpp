@@ -166,7 +166,7 @@ void Game::generate_mines(int exclude_index) {
         int random_index = random_gen(gen);
 
         if (random_index != exclude_index) {
-            mine_indices.insert(random_gen(gen));
+            mine_indices.insert(random_index);
         }
     }
 
