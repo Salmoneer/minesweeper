@@ -27,13 +27,15 @@ private:
 
     int m_width;
     int m_height;
-
     int m_mines;
+
+    bool m_mines_generated;
 
     std::vector<Cell> m_cells;
 
 
     int get_index(int x, int y);
+    void generate_mines(int exclude_index);
 
 public:
     Game() = delete;

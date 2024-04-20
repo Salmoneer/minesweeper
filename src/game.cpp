@@ -8,35 +8,17 @@
 #include <stdexcept>
 #include <string>
 
-Game::Game(int width, int height, int mines) {
-    m_width = width;
-    m_height = height;
-    m_mines = mines;
-
-
+Game::Game(int width, int height, int mines) :
+    m_width(width),
+    m_height(height),
+    m_mines(mines),
+    m_mines_generated(false)
+{
     const int grid_width = m_width * IMG_SIZE;
     const int grid_height = m_height * IMG_SIZE;
 
     const int window_width = grid_width * WINDOW_SCALE;
     const int window_height = grid_height * WINDOW_SCALE;
-
-
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<> random_gen(0, m_width * m_height - 1);
-
-    std::set<int> mine_indices;
-    while (mine_indices.size() < m_mines) {
-        mine_indices.insert(random_gen(gen));
-    }
-
-    for (int i = 0; i < m_width * m_height; i++) {
-        m_cells.push_back({
-            .mine = mine_indices.find(i) != mine_indices.end(),
-            .uncovered = false,
-            .flagged = false
-        });
-    }
 
 
     SDL_Init(SDL_INIT_EVERYTHING);
@@ -54,6 +36,14 @@ Game::Game(int width, int height, int mines) {
 
     for (int i = 1; i <= 8; i++) {
         m_number_textures[i - 1] = IMG_LoadTexture(m_renderer, ("./assets/" + std::to_string(i) + ".png").c_str());
+    }
+
+    for (int i = 0; i < m_width * m_height; i++) {
+        m_cells.push_back({
+            .mine = false,
+            .uncovered = false,
+            .flagged = false
+        });
     }
 }
 
@@ -73,6 +63,11 @@ bool Game::update() {
 
             if (event.button.button == SDL_BUTTON_LEFT) {
                 if (!m_cells[index].flagged) {
+                    if (!m_mines_generated) {
+                        generate_mines(index);
+                        m_mines_generated = true;
+                    }
+
                     m_cells[index].uncovered = true;
                 }
             } else if (event.button.button == SDL_BUTTON_RIGHT) {
@@ -153,4 +148,31 @@ int Game::get_index(int x, int y) {
     }
 
     return index;
+}
+
+void Game::generate_mines(int exclude_index) {
+    if (m_mines_generated) {
+        throw std::runtime_error("generate_mines called twice");
+    }
+
+    m_mines_generated = true;
+
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> random_gen(0, m_width * m_height - 1);
+
+    std::set<int> mine_indices;
+
+    while (mine_indices.size() < m_mines) {
+        int random_index = random_gen(gen);
+
+        if (random_index != exclude_index) {
+            mine_indices.insert(random_gen(gen));
+        }
+    }
+
+    for (int index : mine_indices) {
+        m_cells[index].mine = true;
+    }
 }
