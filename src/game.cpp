@@ -34,8 +34,8 @@ Game::Game(int width, int height, int mines) :
     m_flag_texture = IMG_LoadTexture(m_renderer, "./assets/flag.png");
     m_mine_texture = IMG_LoadTexture(m_renderer, "./assets/mine.png");
 
-    for (int i = 1; i <= 8; i++) {
-        m_number_textures[i - 1] = IMG_LoadTexture(m_renderer, ("./assets/" + std::to_string(i) + ".png").c_str());
+    for (int i = 0; i < 8; i++) {
+        m_number_textures[i] = IMG_LoadTexture(m_renderer, ("./assets/" + std::to_string(i + 1) + ".png").c_str());
     }
 
     for (int i = 0; i < m_width * m_height; i++) {
