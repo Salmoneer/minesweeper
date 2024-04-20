@@ -97,22 +97,32 @@ void Game::draw() {
             };
 
             int index = get_index(x, y);
-            Cell current_cell = m_cells[index];
 
-            if (current_cell.uncovered && current_cell.flagged) {
+            if (m_cells[index].uncovered && m_cells[index].flagged) {
                 std::cout << "x: " << x << ", y: " << y << "\n";
                 throw std::runtime_error("Uncovered and flagged cell found");
             }
 
             SDL_Texture *current_cell_texture;
-            if (!current_cell.uncovered && !current_cell.flagged) {
+
+            if (!m_cells[index].uncovered && !m_cells[index].flagged) {
                 current_cell_texture = m_covered_texture;
-            } else if (!current_cell.uncovered && current_cell.flagged) {
+            } else if (!m_cells[index].uncovered && m_cells[index].flagged) {
                 current_cell_texture = m_flag_texture;
-            } else if (current_cell.uncovered && !current_cell.mine) {
-                current_cell_texture = m_uncovered_texture;
-            } else if (current_cell.uncovered && current_cell.mine) {
+            } else if (m_cells[index].uncovered && m_cells[index].mine) {
                 current_cell_texture = m_mine_texture;
+            } else if (m_cells[index].uncovered && !m_cells[index].mine) {
+                int adjacent_mines = m_adjacent_mines[index];
+
+                if (adjacent_mines < 0 || adjacent_mines > m_number_textures.size()) {
+                    throw std::runtime_error("Found a number of adjacent mines that is out of the allowed range (0-8)");
+                }
+
+                if (adjacent_mines == 0) {
+                    current_cell_texture = m_uncovered_texture;
+                } else {
+                    current_cell_texture = m_number_textures[m_adjacent_mines[index] - 1];
+                }
             } else {
                 throw std::runtime_error("Unhandled case in choosing texture to render");
             }
