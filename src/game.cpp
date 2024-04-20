@@ -212,4 +212,8 @@ void Game::count_all_adjacent_mines() {
     for (int i = 0; i < m_cells.size(); i++) {
         m_adjacent_mines.push_back(count_cell_adjacent_mines(i));
     }
+
+    if (m_adjacent_mines.size() != m_cells.size()) {
+        throw std::runtime_error("Incorrect number of cells had their adjacent mines calculated");
+    }
 }
