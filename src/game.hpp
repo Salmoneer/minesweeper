@@ -12,6 +12,12 @@ enum class Direction {
     Down,
 };
 
+enum class GameState {
+    Playing,
+    Lose,
+    Win,
+};
+
 const std::array<std::pair<int, int>, 4> direction_deltas = {{
     {-1,  0},
     { 0, -1},
@@ -38,16 +44,20 @@ private:
     SDL_Texture *m_mine_texture;
     std::array<SDL_Texture *, 8> m_number_textures;
 
+    SDL_Texture *m_win_texture;
+    SDL_Texture *m_lose_texture;
+
 
     int m_width;
     int m_height;
     int m_mines;
 
-    bool m_mines_generated;
-
     std::vector<Cell> m_cells;
 
+    bool m_mines_generated;
     std::vector<int> m_adjacent_mines;
+
+    GameState m_state;
 
 
     int get_index(int x, int y);

@@ -13,7 +13,8 @@ Game::Game(int width, int height, int mines) :
     m_width(width),
     m_height(height),
     m_mines(mines),
-    m_mines_generated(false)
+    m_mines_generated(false),
+    m_state(GameState::Playing)
 {
     const int grid_width = m_width * IMG_SIZE;
     const int grid_height = m_height * IMG_SIZE;
@@ -34,6 +35,9 @@ Game::Game(int width, int height, int mines) :
     m_uncovered_texture = IMG_LoadTexture(m_renderer, "./assets/uncovered.png");
     m_flag_texture = IMG_LoadTexture(m_renderer, "./assets/flag.png");
     m_mine_texture = IMG_LoadTexture(m_renderer, "./assets/mine.png");
+
+    m_win_texture = IMG_LoadTexture(m_renderer, "./assets/win.png");
+    m_lose_texture = IMG_LoadTexture(m_renderer, "./assets/lose.png");
 
     for (int i = 0; i < 8; i++) {
         m_number_textures[i] = IMG_LoadTexture(m_renderer, ("./assets/" + std::to_string(i + 1) + ".png").c_str());
@@ -63,31 +67,52 @@ bool Game::update() {
             int index = get_index(event.button.x / (IMG_SIZE * WINDOW_SCALE), event.button.y / (IMG_SIZE * WINDOW_SCALE));
 
             if (event.button.button == SDL_BUTTON_LEFT) {
-                if (!m_cells[index].flagged) {
-                    if (m_cells[index].mine) {
-                        std::cout << "You lose!" << std::endl;
-                    } else {
-                        bool force_uncover = false;
-
-                        if (!m_mines_generated) {
-                            force_uncover = true;
-                            generate_mines(index);
-                            count_all_adjacent_mines();
-                        }
-
+                if (m_state == GameState::Playing) {
+                    if (!m_cells[index].flagged) {
                         m_cells[index].uncovered = true;
 
-                        if (m_adjacent_mines[index] == 0 || force_uncover) {
-                            uncover(index);
+                        if (!m_cells[index].mine) {
+                            bool force_uncover = false;
+
+                            if (!m_mines_generated) {
+                                force_uncover = true;
+                                generate_mines(index);
+                                count_all_adjacent_mines();
+                            }
+
+                            m_cells[index].uncovered = true;
+
+                            if (m_adjacent_mines[index] == 0 || force_uncover) {
+                                uncover(index);
+                            }
                         }
                     }
                 }
             } else if (event.button.button == SDL_BUTTON_RIGHT) {
-                if (!m_cells[index].uncovered) {
-                    m_cells[index].flagged = !m_cells[index].flagged;
+                if (m_state == GameState::Playing) {
+                    if (!m_cells[index].uncovered) {
+                        m_cells[index].flagged = !m_cells[index].flagged;
+                    }
                 }
             }
         }
+    }
+
+    bool win = true;
+    bool lose = false;
+
+    for (int i = 0; i < m_cells.size(); i++) {
+        if (!m_cells[i].uncovered && !m_cells[i].mine) {
+            win = false;
+        } else if (m_cells[i].uncovered && m_cells[i].mine) {
+            lose = true;
+        }
+    }
+
+    if (win) {
+        m_state = GameState::Win;
+    } else if (lose) {
+        m_state = GameState::Lose;
     }
 
     return true;
@@ -117,6 +142,24 @@ void Game::draw() {
 
             SDL_RenderCopy(m_renderer, get_cell_texture(index), nullptr, &cell_rect);
         }
+    }
+
+    if (m_state == GameState::Win) {
+        SDL_Rect win_rect;
+
+        SDL_QueryTexture(m_win_texture, nullptr, nullptr, &win_rect.w, &win_rect.h);
+        win_rect.x = (m_width  * IMG_SIZE - win_rect.w) / 2;
+        win_rect.y = (m_height * IMG_SIZE - win_rect.h) / 2;
+
+        SDL_RenderCopy(m_renderer, m_win_texture, nullptr, &win_rect);
+    } else if (m_state == GameState::Lose) {
+        SDL_Rect lose_rect;
+
+        SDL_QueryTexture(m_lose_texture, nullptr, nullptr, &lose_rect.w, &lose_rect.h);
+        lose_rect.x = (m_width  * IMG_SIZE - lose_rect.w) / 2;
+        lose_rect.y = (m_height * IMG_SIZE - lose_rect.h) / 2;
+
+        SDL_RenderCopy(m_renderer, m_lose_texture, nullptr, &lose_rect);
     }
 
     SDL_SetRenderTarget(m_renderer, nullptr);
